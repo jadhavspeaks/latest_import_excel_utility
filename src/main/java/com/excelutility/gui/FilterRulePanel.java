@@ -1,6 +1,7 @@
 package com.excelutility.gui;
 
 import com.excelutility.core.FilterRule;
+import com.excelutility.core.Operator;
 import com.excelutility.core.expression.FilterExpression;
 import com.excelutility.core.expression.RuleNode;
 import net.miginfocom.swing.MigLayout;
@@ -20,9 +21,12 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
     private final FilterRule initialRule;
     private final JTextField ruleNameField;
     private final JLabel recordCountLabel;
-    private final JComboBox<com.excelutility.core.Operator> operatorComboBox;
-    private final JTextField targetColumnField;
+    private final JComboBox<Operator> operatorComboBox;
+    private final JLabel targetColumnLabel;
     private final JTextField sourceValueField;
+    private final JLabel sourceValueLabel;
+    private final JPanel valuePanel;
+    private final CardLayout valueCardLayout;
 
     public FilterRulePanel(String name, FilterRule rule, ActionListener deleteListener, ActionListener updateListener) {
         this.initialRule = rule;
@@ -34,22 +38,38 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
         ruleNameField.setBorder(null);
         add(ruleNameField, "growx, wmin 80");
 
-        targetColumnField = new JTextField(rule.getTargetColumn(), 15);
-        add(targetColumnField, "sg fields");
+        targetColumnLabel = new JLabel(rule.getTargetColumn());
+        add(targetColumnLabel, "sg fields");
 
-        operatorComboBox = new JComboBox<>(com.excelutility.core.Operator.values());
+        operatorComboBox = new JComboBox<>(Operator.values());
         operatorComboBox.setSelectedItem(rule.getOperator());
         add(operatorComboBox, "sg operator");
 
+        valueCardLayout = new CardLayout();
+        valuePanel = new JPanel(valueCardLayout);
+
+        sourceValueLabel = new JLabel(rule.getSourceValue());
         sourceValueField = new JTextField(rule.getSourceValue(), 15);
-        add(sourceValueField, "sg fields, growx");
+
+        valuePanel.add(sourceValueLabel, "label");
+        valuePanel.add(sourceValueField, "field");
+        valuePanel.add(new JPanel(), "empty");
+
+        add(valuePanel, "sg fields, growx");
+
+        operatorComboBox.addActionListener(e -> {
+            updateValueComponent();
+            if (updateListener != null) {
+                updateListener.actionPerformed(e);
+            }
+        });
 
         if (updateListener != null) {
             DocumentListener docListener = new SimpleDocumentListener(updateListener);
-            targetColumnField.getDocument().addDocumentListener(docListener);
             sourceValueField.getDocument().addDocumentListener(docListener);
-            operatorComboBox.addActionListener(updateListener);
         }
+
+        updateValueComponent();
 
         recordCountLabel = new JLabel("(N/A)");
         recordCountLabel.setFont(recordCountLabel.getFont().deriveFont(Font.BOLD));
@@ -68,17 +88,42 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
         add(deleteButton);
     }
 
+    private void updateValueComponent() {
+        Operator selectedOperator = (Operator) operatorComboBox.getSelectedItem();
+        if (selectedOperator != null) {
+            switch (selectedOperator.getValueType()) {
+                case VALUE_FIXED:
+                    valueCardLayout.show(valuePanel, "label");
+                    break;
+                case VALUE_EDITABLE:
+                    valueCardLayout.show(valuePanel, "field");
+                    break;
+                case NO_VALUE:
+                    valueCardLayout.show(valuePanel, "empty");
+                    break;
+            }
+        }
+    }
+
     public String getRuleName() {
         return ruleNameField.getText();
     }
 
     public FilterRule getRule() {
+        String sourceValue;
+        Operator selectedOperator = (Operator) operatorComboBox.getSelectedItem();
+        if (selectedOperator.getValueType() == Operator.ValueType.VALUE_EDITABLE) {
+            sourceValue = sourceValueField.getText();
+        } else {
+            sourceValue = initialRule.getSourceValue();
+        }
+
         return new FilterRule(
                 initialRule.getSourceType(),
-                sourceValueField.getText(),
-                targetColumnField.getText(),
+                sourceValue,
+                targetColumnLabel.getText(),
                 initialRule.isTrimWhitespace(),
-                (com.excelutility.core.Operator) operatorComboBox.getSelectedItem()
+                selectedOperator
         );
     }
 
