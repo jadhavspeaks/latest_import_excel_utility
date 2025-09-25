@@ -37,6 +37,7 @@ public class FilterRule {
     private final String sourceValue;
     private final String targetColumn;
     private final boolean trimWhitespace;
+    private final Operator operator;
 
     /**
      * Constructs a new FilterRule.
@@ -45,17 +46,20 @@ public class FilterRule {
      * @param sourceValue    The value to filter by (can be a cell value or a column name).
      * @param targetColumn   The name of the column in the data file to apply the filter on.
      * @param trimWhitespace If true, whitespace will be trimmed from the target column's values before comparison.
+     * @param operator       The operator to use for the comparison.
      */
     @JsonCreator
     public FilterRule(
             @JsonProperty("sourceType") SourceType sourceType,
             @JsonProperty("sourceValue") String sourceValue,
             @JsonProperty("targetColumn") String targetColumn,
-            @JsonProperty("trimWhitespace") boolean trimWhitespace) {
+            @JsonProperty("trimWhitespace") boolean trimWhitespace,
+            @JsonProperty("operator") Operator operator) {
         this.sourceType = sourceType;
         this.sourceValue = sourceValue;
         this.targetColumn = targetColumn;
         this.trimWhitespace = trimWhitespace;
+        this.operator = operator;
     }
 
     public SourceType getSourceType() {
@@ -74,6 +78,10 @@ public class FilterRule {
         return trimWhitespace;
     }
 
+    public Operator getOperator() {
+        return operator;
+    }
+
     @Override
     public String toString() {
         return String.format("Filter on column '%s' %s '%s'",
@@ -87,7 +95,7 @@ public class FilterRule {
      * @return A descriptive string representation of the rule.
      */
     public String getDescriptiveName() {
-        String baseName = String.format("%s = '%s'", targetColumn, sourceValue);
+        String baseName = String.format("%s %s '%s'", targetColumn, operator.toString(), sourceValue);
         if (sourceType == SourceType.BY_COLUMN) {
             return baseName + " (from Column)";
         }

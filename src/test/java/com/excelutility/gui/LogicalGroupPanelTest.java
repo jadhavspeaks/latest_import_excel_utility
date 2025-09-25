@@ -22,7 +22,7 @@ public class LogicalGroupPanelTest {
     }
 
     private FilterRulePanel createRealRulePanel(String ruleName) {
-        FilterRule rule = new FilterRule(FilterRule.SourceType.BY_VALUE, ruleName, "ColumnA", false);
+        FilterRule rule = new FilterRule(FilterRule.SourceType.BY_VALUE, ruleName, "ColumnA", false, com.excelutility.core.Operator.EQUALS);
         // The delete listener can be null for this test
         return new FilterRulePanel(ruleName, rule, null);
     }

@@ -13,6 +13,7 @@ public class RuleState {
     private final String sourceValue;
     private final String targetColumn;
     private final boolean trimWhitespace;
+    private final Operator operator;
 
     @JsonCreator
     public RuleState(
@@ -20,12 +21,14 @@ public class RuleState {
             @JsonProperty("sourceType") FilterRule.SourceType sourceType,
             @JsonProperty("sourceValue") String sourceValue,
             @JsonProperty("targetColumn") String targetColumn,
-            @JsonProperty("trimWhitespace") boolean trimWhitespace) {
+            @JsonProperty("trimWhitespace") boolean trimWhitespace,
+            @JsonProperty("operator") Operator operator) {
         this.name = name;
         this.sourceType = sourceType;
         this.sourceValue = sourceValue;
         this.targetColumn = targetColumn;
         this.trimWhitespace = trimWhitespace;
+        this.operator = operator != null ? operator : Operator.EQUALS;
     }
 
     // Getters
@@ -34,9 +37,10 @@ public class RuleState {
     public String getSourceValue() { return sourceValue; }
     public String getTargetColumn() { return targetColumn; }
     public boolean isTrimWhitespace() { return trimWhitespace; }
+    public Operator getOperator() { return operator; }
 
     public FilterRule toFilterRule() {
-        return new FilterRule(sourceType, sourceValue, targetColumn, trimWhitespace);
+        return new FilterRule(sourceType, sourceValue, targetColumn, trimWhitespace, operator);
     }
 
     @Override
@@ -47,12 +51,13 @@ public class RuleState {
         return trimWhitespace == ruleState.trimWhitespace &&
                 Objects.equals(name, ruleState.name) &&
                 sourceType == ruleState.sourceType &&
+                operator == ruleState.operator &&
                 Objects.equals(sourceValue, ruleState.sourceValue) &&
                 Objects.equals(targetColumn, ruleState.targetColumn);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, sourceType, sourceValue, targetColumn, trimWhitespace);
+        return Objects.hash(name, sourceType, sourceValue, targetColumn, trimWhitespace, operator);
     }
 }

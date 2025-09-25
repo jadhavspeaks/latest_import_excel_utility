@@ -15,13 +15,14 @@ import java.awt.event.ActionListener;
  */
 public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
 
-    private final FilterRule rule;
+    private FilterRule rule;
     private final JTextField ruleNameField;
     private final JLabel recordCountLabel;
+    private final JComboBox<com.excelutility.core.Operator> operatorComboBox;
 
     public FilterRulePanel(String name, FilterRule rule, ActionListener deleteListener) {
         this.rule = rule;
-        setLayout(new MigLayout("insets 2 5 2 5, fillx", "[grow]rel[]rel[]rel[]"));
+        setLayout(new MigLayout("insets 2 5 2 5, fillx", "[grow]rel[]rel[]rel[]rel[]"));
         setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(224, 224, 224))); // Light gray separator
         setBackground(Color.WHITE);
 
@@ -29,7 +30,21 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
         ruleNameField.setBorder(null);
         add(ruleNameField, "growx, wmin 80");
 
+        operatorComboBox = new JComboBox<>(com.excelutility.core.Operator.values());
+        operatorComboBox.setSelectedItem(rule.getOperator());
+        add(operatorComboBox, "sg operator");
+
         JLabel ruleLabel = new JLabel(rule.getDescriptiveName());
+        operatorComboBox.addActionListener(e -> {
+            this.rule = new FilterRule(
+                    rule.getSourceType(),
+                    rule.getSourceValue(),
+                    rule.getTargetColumn(),
+                    rule.isTrimWhitespace(),
+                    (com.excelutility.core.Operator) operatorComboBox.getSelectedItem()
+            );
+            ruleLabel.setText(rule.getDescriptiveName());
+        });
         ruleLabel.setForeground(Color.DARK_GRAY);
         add(ruleLabel, "gapleft 10, growx");
 

@@ -75,7 +75,7 @@ public class FilteringServiceTest {
     @Test
     void testFilterByValue() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.OR);
         assertEquals(5, filteredRows.size()); // Header + 4 rows
@@ -84,7 +84,7 @@ public class FilteringServiceTest {
     @Test
     void testFilterByValueWithTrim() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", true));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", true, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.OR);
         assertEquals(3, filteredRows.size()); // Header + 2 rows
@@ -94,7 +94,7 @@ public class FilteringServiceTest {
     void testFilterByColumnName() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
         // This should filter where Status == "Female"
-        rules.add(new FilterRule(FilterRule.SourceType.BY_COLUMN, "Female", "Status", true));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_COLUMN, "Female", "Status", true, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.OR);
         assertEquals(2, filteredRows.size()); // Header + 1 row
@@ -104,7 +104,7 @@ public class FilteringServiceTest {
     @Test
     void testZeroRecordFilter() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "San Francisco", "City", false));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "San Francisco", "City", false, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.OR);
         assertEquals(1, filteredRows.size()); // Header only
@@ -113,7 +113,7 @@ public class FilteringServiceTest {
     @Test
     void testFilterByEmptyCell() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "", "City", false));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "", "City", false, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.OR);
         assertEquals(2, filteredRows.size()); // Header + 1 row
@@ -124,8 +124,8 @@ public class FilteringServiceTest {
     void testFilterWithOrOperator() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
         // City is "Los Angeles" (Bob) OR Name is "David" (David)
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Los Angeles", "City", false));
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "David", "Name", false));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Los Angeles", "City", false, Operator.EQUALS));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "David", "Name", false, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.OR);
 
@@ -141,8 +141,8 @@ public class FilteringServiceTest {
     void testFilterWithAndOperator() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
         // City is "New York" (trimmed) AND Status is "Active"
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", true));
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", true, Operator.EQUALS));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.AND);
 
@@ -157,8 +157,8 @@ public class FilteringServiceTest {
     void testFilterWithAndOperatorNoResults() throws Exception {
         List<FilterRule> rules = new ArrayList<>();
         // City is "New York" AND Name is "Bob"
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", false));
-        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Bob", "Name", false));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", false, Operator.EQUALS));
+        rules.add(new FilterRule(FilterRule.SourceType.BY_VALUE, "Bob", "Name", false, Operator.EQUALS));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, rules, FilteringService.LogicalOperator.AND);
 
@@ -169,8 +169,8 @@ public class FilteringServiceTest {
     void testFilterWithExpressionAnd() throws Exception {
         // (City is "Chicago" AND Status is "Active") -> David
         GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Chicago", "City", true)));
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Chicago", "City", true, Operator.EQUALS)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false, Operator.EQUALS)));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
         assertEquals(2, filteredRows.size()); // Header + David
@@ -181,8 +181,8 @@ public class FilteringServiceTest {
     void testFilterWithExpressionOr() throws Exception {
         // (Name is "Bob" OR Name is "Eve") -> Bob, Eve
         GroupNode root = new GroupNode(FilteringService.LogicalOperator.OR, "Root");
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Bob", "Name", false)));
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Eve", "Name", false)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Bob", "Name", false, Operator.EQUALS)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Eve", "Name", false, Operator.EQUALS)));
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
         assertEquals(3, filteredRows.size()); // Header + Bob + Eve
@@ -196,11 +196,11 @@ public class FilteringServiceTest {
         // Status is "Active" AND (City is "Los Angeles" OR City is "Chicago") -> David
         // This should not match Bob (Inactive) or Alice/Charlie (New York)
         GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Active", "Status", false, Operator.EQUALS)));
 
         GroupNode subGroup = new GroupNode(FilteringService.LogicalOperator.OR, "Sub-Group");
-        subGroup.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Los Angeles", "City", true)));
-        subGroup.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Chicago", "City", true)));
+        subGroup.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Los Angeles", "City", true, Operator.EQUALS)));
+        subGroup.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Chicago", "City", true, Operator.EQUALS)));
         root.addChild(subGroup);
 
         List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
@@ -220,7 +220,7 @@ public class FilteringServiceTest {
     void testTickSymbolNormalization() throws Exception {
         // The Normalizer should convert "P" in the file to "✓" for matching.
         GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "✓", "Code", false)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "✓", "Code", false, Operator.EQUALS)));
 
         List<List<Object>> filteredRows = filteringService.filter(specialCharsFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
         assertEquals(2, filteredRows.size()); // Header + 1 row
@@ -231,7 +231,7 @@ public class FilteringServiceTest {
     void testNumericNormalization() throws Exception {
         // The Normalizer should convert 100.0 and 100 to "100" for matching.
         GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "100", "Value", false)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "100", "Value", false, Operator.EQUALS)));
 
         List<List<Object>> filteredRows = filteringService.filter(specialCharsFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
         assertEquals(3, filteredRows.size()); // Header + 2 rows
@@ -245,17 +245,45 @@ public class FilteringServiceTest {
         // Use header rows 0 and 1. The canonical name for the second column should be "Group 1 | Name".
         List<Integer> headerRows = Arrays.asList(0, 1);
         GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
-        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "First", "Group 1 | Name", false)));
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "First", "Group 1 | Name", false, Operator.EQUALS)));
 
         List<List<Object>> filteredRows = filteringService.filter(multiHeaderFilePath, "Data", headerRows, ConcatenationMode.BREADCRUMB, root);
         assertEquals(2, filteredRows.size()); // Header + 1 row
         assertEquals("A1", filteredRows.get(1).get(0));
     }
+
+    @Test
+    void testFilterContains() throws Exception {
+        GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "New", "City", false, Operator.CONTAINS)));
+
+        List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
+        assertEquals(3, filteredRows.size()); // Header + Alice + Charlie
+    }
+
+    @Test
+    void testFilterStartsWith() throws Exception {
+        GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "Los", "City", false, Operator.STARTS_WITH)));
+
+        List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
+        assertEquals(2, filteredRows.size()); // Header + Bob
+    }
+
+    @Test
+    void testFilterEndsWith() throws Exception {
+        GroupNode root = new GroupNode(FilteringService.LogicalOperator.AND, "Root");
+        root.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "go", "City", true, Operator.ENDS_WITH)));
+
+        List<List<Object>> filteredRows = filteringService.filter(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, root);
+        assertEquals(3, filteredRows.size()); // Header + David + Eve
+    }
+
     @Test
     void testGetUnifiedFilteredData() throws Exception {
         // Expression: City is "New York"
         GroupNode expression = new GroupNode(FilteringService.LogicalOperator.AND, "New York Users");
-        expression.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", true)));
+        expression.addChild(new RuleNode(new FilterRule(FilterRule.SourceType.BY_VALUE, "New York", "City", true, Operator.EQUALS)));
 
         java.util.Map<String, List<List<Object>>> results = filteringService.getUnifiedFilteredData(dataFilePath, "Sheet1", Collections.singletonList(0), ConcatenationMode.LEAF_ONLY, expression);
 

@@ -449,9 +449,14 @@ public class FilterPanel extends JPanel {
                 FilterRule.SourceType sourceType = sourceDialog.getSelectedType();
                 if (sourceType == null) continue;
                 String sourceValue = sourceDialog.getSelectedValue();
+                OperatorSelectionDialog operatorDialog = new OperatorSelectionDialog((Frame) SwingUtilities.getWindowAncestor(this));
+                operatorDialog.setVisible(true);
+                Operator selectedOperator = operatorDialog.getSelectedOperator();
+                if (selectedOperator == null) continue;
+
                 for (String target : selectedTargets) {
-                    FilterRule rule = new FilterRule(sourceType, sourceValue, target, trim);
-                    logger.info("FilterCreate: targetColumn='{}', op=EQUALS, value='{}', trim={}", target, sourceValue, trim);
+                    FilterRule rule = new FilterRule(sourceType, sourceValue, target, trim, selectedOperator);
+                    logger.info("FilterCreate: targetColumn='{}', op={}, value='{}', trim={}", target, selectedOperator, sourceValue, trim);
                     filterExpressionBuilderPanel.addRuleToGroup(targetGroup, rule);
                 }
                 updateFilterResults();

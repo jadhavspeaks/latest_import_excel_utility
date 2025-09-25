@@ -124,7 +124,7 @@ public class FilterExpressionBuilderPanel extends JPanel {
             if (comp instanceof FilterRulePanel) {
                 FilterRulePanel rulePanel = (FilterRulePanel) comp;
                 FilterRule rule = rulePanel.getRule();
-                ruleStates.add(new com.excelutility.core.RuleState(rulePanel.getName(), rule.getSourceType(), rule.getSourceValue(), rule.getTargetColumn(), rule.isTrimWhitespace()));
+                ruleStates.add(new com.excelutility.core.RuleState(rulePanel.getName(), rule.getSourceType(), rule.getSourceValue(), rule.getTargetColumn(), rule.isTrimWhitespace(), rule.getOperator()));
             } else if (comp instanceof LogicalGroupPanel) {
                 groupStates.add(createGroupStateFromPanel((LogicalGroupPanel) comp));
             } else if (comp instanceof LogicalGroupPanel.InfixOperatorPanel) {

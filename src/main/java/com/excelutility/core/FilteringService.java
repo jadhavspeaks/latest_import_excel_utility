@@ -105,7 +105,7 @@ public class FilteringService {
         String sourceValue = rule.getSourceValue();
 
         // The trimWhitespace flag is now implicitly handled by the Normalizer.
-        return isMatch(cellObject, sourceValue);
+        return isMatch(cellObject, sourceValue, rule.getOperator());
     }
 
     /**
@@ -113,9 +113,10 @@ public class FilteringService {
      *
      * @param cellObject   The cell's value as an Object.
      * @param sourceValue  The value to compare against.
+     * @param operator     The operator to use for the comparison.
      * @return True if the values are considered a match, false otherwise.
      */
-    private boolean isMatch(Object cellObject, String sourceValue) {
+    private boolean isMatch(Object cellObject, String sourceValue, Operator operator) {
         String normalizedCellValue = Normalizer.normalizeValue(cellObject);
         String normalizedSourceValue = Normalizer.normalizeValue(sourceValue);
 
@@ -123,7 +124,23 @@ public class FilteringService {
         if (normalizedSourceValue.isEmpty()) {
             return normalizedCellValue.isEmpty();
         }
-        return normalizedCellValue.equalsIgnoreCase(normalizedSourceValue);
+
+        switch (operator) {
+            case EQUALS:
+                return normalizedCellValue.equalsIgnoreCase(normalizedSourceValue);
+            case NOT_EQUALS:
+                return !normalizedCellValue.equalsIgnoreCase(normalizedSourceValue);
+            case CONTAINS:
+                return normalizedCellValue.toLowerCase().contains(normalizedSourceValue.toLowerCase());
+            case NOT_CONTAINS:
+                return !normalizedCellValue.toLowerCase().contains(normalizedSourceValue.toLowerCase());
+            case STARTS_WITH:
+                return normalizedCellValue.toLowerCase().startsWith(normalizedSourceValue.toLowerCase());
+            case ENDS_WITH:
+                return normalizedCellValue.toLowerCase().endsWith(normalizedSourceValue.toLowerCase());
+            default:
+                return false;
+        }
     }
 
     /**
