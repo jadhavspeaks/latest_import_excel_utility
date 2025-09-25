@@ -6,6 +6,8 @@ import com.excelutility.core.expression.RuleNode;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,13 +17,15 @@ import java.awt.event.ActionListener;
  */
 public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
 
-    private FilterRule rule;
+    private final FilterRule initialRule;
     private final JTextField ruleNameField;
     private final JLabel recordCountLabel;
     private final JComboBox<com.excelutility.core.Operator> operatorComboBox;
+    private final JTextField targetColumnField;
+    private final JTextField sourceValueField;
 
-    public FilterRulePanel(String name, FilterRule rule, ActionListener deleteListener) {
-        this.rule = rule;
+    public FilterRulePanel(String name, FilterRule rule, ActionListener deleteListener, ActionListener updateListener) {
+        this.initialRule = rule;
         setLayout(new MigLayout("insets 2 5 2 5, fillx", "[grow]rel[]rel[]rel[]rel[]"));
         setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(224, 224, 224))); // Light gray separator
         setBackground(Color.WHITE);
@@ -30,23 +34,22 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
         ruleNameField.setBorder(null);
         add(ruleNameField, "growx, wmin 80");
 
+        targetColumnField = new JTextField(rule.getTargetColumn(), 15);
+        add(targetColumnField, "sg fields");
+
         operatorComboBox = new JComboBox<>(com.excelutility.core.Operator.values());
         operatorComboBox.setSelectedItem(rule.getOperator());
         add(operatorComboBox, "sg operator");
 
-        JLabel ruleLabel = new JLabel(rule.getDescriptiveName());
-        operatorComboBox.addActionListener(e -> {
-            this.rule = new FilterRule(
-                    rule.getSourceType(),
-                    rule.getSourceValue(),
-                    rule.getTargetColumn(),
-                    rule.isTrimWhitespace(),
-                    (com.excelutility.core.Operator) operatorComboBox.getSelectedItem()
-            );
-            ruleLabel.setText(rule.getDescriptiveName());
-        });
-        ruleLabel.setForeground(Color.DARK_GRAY);
-        add(ruleLabel, "gapleft 10, growx");
+        sourceValueField = new JTextField(rule.getSourceValue(), 15);
+        add(sourceValueField, "sg fields, growx");
+
+        if (updateListener != null) {
+            DocumentListener docListener = new SimpleDocumentListener(updateListener);
+            targetColumnField.getDocument().addDocumentListener(docListener);
+            sourceValueField.getDocument().addDocumentListener(docListener);
+            operatorComboBox.addActionListener(updateListener);
+        }
 
         recordCountLabel = new JLabel("(N/A)");
         recordCountLabel.setFont(recordCountLabel.getFont().deriveFont(Font.BOLD));
@@ -54,9 +57,7 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
 
         JButton previewButton = new JButton("Preview");
         previewButton.setToolTipText("Preview matching results for this rule in a new tab");
-        // The action listener will be attached in FilterPanel to call the preview logic
-        // This is left to the parent container to wire up.
-        add(previewButton, "hidemode 3"); // Hide if not used, but we will use it.
+        add(previewButton, "hidemode 3");
 
         JButton deleteButton = new JButton("X");
         deleteButton.setToolTipText("Delete this filter rule");
@@ -72,7 +73,13 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
     }
 
     public FilterRule getRule() {
-        return rule;
+        return new FilterRule(
+                initialRule.getSourceType(),
+                sourceValueField.getText(),
+                targetColumnField.getText(),
+                initialRule.isTrimWhitespace(),
+                (com.excelutility.core.Operator) operatorComboBox.getSelectedItem()
+        );
     }
 
     public void setRecordCount(int count) {
@@ -84,21 +91,18 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
         }
     }
 
-    // A way for the parent to get the preview button and attach a listener.
     public JButton getPreviewButton() {
-        // Search for the button by its text, as it's a direct child.
         for (Component comp : getComponents()) {
             if (comp instanceof JButton && "Preview".equals(((JButton) comp).getText())) {
                 return (JButton) comp;
             }
         }
-        return null; // Should not happen
+        return null;
     }
 
     @Override
     public FilterExpression getExpression() {
-        // The RuleNode's descriptive name should come from the rule itself, not the panel's editable name.
-        return new RuleNode(this.rule);
+        return new RuleNode(this.getRule());
     }
 
     @Override
@@ -109,5 +113,16 @@ public class FilterRulePanel extends JPanel implements ExpressionNodeComponent {
     @Override
     public void setName(String name) {
         ruleNameField.setText(name);
+    }
+
+    private static class SimpleDocumentListener implements DocumentListener {
+        private final ActionListener actionListener;
+
+        SimpleDocumentListener(ActionListener actionListener) {
+            this.actionListener = actionListener;
+        }
+        @Override public void insertUpdate(DocumentEvent e) { if(actionListener != null) actionListener.actionPerformed(null); }
+        @Override public void removeUpdate(DocumentEvent e) { if(actionListener != null) actionListener.actionPerformed(null); }
+        @Override public void changedUpdate(DocumentEvent e) { if(actionListener != null) actionListener.actionPerformed(null); }
     }
 }

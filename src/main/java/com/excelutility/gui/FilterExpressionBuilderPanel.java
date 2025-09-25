@@ -36,8 +36,10 @@ public class FilterExpressionBuilderPanel extends JPanel {
         ActionListener deleteListener = e -> {
             FilterRulePanel sourcePanel = (FilterRulePanel) e.getSource();
             targetGroup.removeComponent(sourcePanel);
+            panelProvider.updateFilterResults();
         };
-        FilterRulePanel newRulePanel = new FilterRulePanel(ruleName, rule, deleteListener);
+        ActionListener updateListener = e -> panelProvider.updateFilterResults();
+        FilterRulePanel newRulePanel = new FilterRulePanel(ruleName, rule, deleteListener, updateListener);
 
         if (panelProvider != null && newRulePanel.getPreviewButton() != null) {
             newRulePanel.getPreviewButton().addActionListener(e -> panelProvider.previewRule(newRulePanel));
